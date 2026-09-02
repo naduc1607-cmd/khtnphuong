@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Khu Vực Giáo Viên - Tạo Đề Thi Hóa Học</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background: #f1f5f9; padding: 40px 15px; color: #0f172a; }
+    .box { max-width: 550px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    h2 { color: #0284c7; margin-bottom: 15px; }
+    label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; }
+    input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 1rem; }
+    button { background: #0284c7; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    button:hover { opacity: 0.9; }
+    .status { margin-top: 15px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Tạo Đề Thi Cho Học Sinh</h2>
+    <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 15px;">
+      Hỗ trợ hình ảnh, công thức chỉ số dưới, trắc nghiệm và câu hỏi điền ô ngắn.
+    </p>
+    
+    <label>1. Chọn file đề thi Word (.docx):</label>
+    <input type="file" id="wordFile" accept=".docx">
+
+    <label>2. Thời gian làm bài (phút):</label>
+    <input type="number" id="examDuration" value="15" min="1" max="180">
+
+    <button type="button" onclick="generateExamFile()">📥 Xuất File Đề (dethi.js)</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    function autoFormatChemicalSubscripts(text) {
+      return text.replace(/(<[^>]+>)|(([A-Z][a-z]?|\))(\d+))/g, function(match, tag, chem, elem, num) {
+        if (tag) return tag;
+        return elem + "<sub>" + num + "</sub>";
+      });
+    }
+
+    function generateExamFile() {
+      const file = document.getElementById('wordFile').files[0];
+      const duration = parseInt(document.getElementById('examDuration').value) || 15;
+      const statusDiv = document.getElementById('status');
+
+      if (!file) {
+        alert("Vui lòng chọn file đề Word (.docx) trước!");
+        return;
+      }
+
+      statusDiv.style.color = "#0284c7";
+      statusDiv.innerText = "⏳ Đang bóc tách câu hỏi và hình ảnh từ file Word...";
+
+      const options = {
+        convertImage: mammoth.images.imgElement(function(image) {
+          return image.read("base64").then(function(imageBuffer) {
+            return {
+              src: "data:" + image.contentType + ";base64," + imageBuffer
+            };
+          });
+        })
+      };
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        mammoth.convertToHtml({ arrayBuffer: e.target.result }, options).then(res => {
+          let rawHtml = res.value;
+          let paragraphs = rawHtml.split(/<\/p>|<br\s*\/?>/i)
+            .map(p => p.replace(/<p[^>]*>/i, '').trim())
+            .filter(p => p.length > 0);
+
+          let questions = [];
+          let currentQ = null;
+          let answerKeyMap = {};
+
+          paragraphs.forEach(line => {
+            let plainText = line.replace(/<[^>]*>/g, '').trim();
+
+            if (/^đáp án\s*[:.]/i.test(plainText)) {
+              let keyString = plainText.replace(/^đáp án\s*[:.]/i, '').trim();
+              let parts = keyString.split(/[,;\n]+/);
+              parts.forEach(p => {
+                let m = p.trim().match(/^(\d+)[:.\s]*([\s\S]+)$/i);
+                if (m) {
+                  let qNum = parseInt(m[1]);
+                  let ansVal = m[2].trim();
+                  answerKeyMap[qNum] = ansVal;
+                }
+              });
+              return;
+            }
+
+            let qMatch = plainText.match(/^câu\s*(\d+)[:.]/i);
+            if (qMatch) {
+              if (currentQ) {
+                currentQ.type = Object.keys(currentQ.options).length > 0 ? 'mcq' : 'short_answer';
+                questions.push(currentQ);
+              }
+              currentQ = { 
+                index: parseInt(qMatch[1]),
+                question: autoFormatChemicalSubscripts(line), 
+                options: {}, 
+                answer: '',
+                type: 'mcq'
+              };
+            } else if (currentQ && Object.keys(currentQ.options).length === 0 && line.includes("<img")) {
+              currentQ.question += "<br>" + line;
+            } else if (/^[A-D][:.]/i.test(plainText) && currentQ) {
+              let optKey = plainText[0].toUpperCase();
+              let optVal = line.replace(/^[A-D][:.]\s*/i, '').trim();
+              currentQ.options[optKey] = autoFormatChemicalSubscripts(optVal);
+            }
+          });
+
+          if (currentQ) {
+            currentQ.type = Object.keys(currentQ.options).length > 0 ? 'mcq' : 'short_answer';
+            questions.push(currentQ);
+          }
+
+          questions.forEach((q, i) => {
+            let num = q.index || (i + 1);
+            if (answerKeyMap[num]) {
+              q.answer = answerKeyMap[num];
+            }
+          });
+
+          if (questions.length === 0) {
+            statusDiv.style.color = "#dc2626";
+            statusDiv.innerText = "❌ Không trích xuất được câu hỏi. Hãy kiểm tra lại file Word!";
+            return;
+          }
+
+          const examData = {
+            duration: duration,
+            questions: questions
+          };
+          const fileContent = "const EXAM_DATA = " + JSON.stringify(examData, null, 2) + ";";
+
+          const blob = new Blob([fileContent], { type: 'application/javascript;charset=utf-8' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'dethi.js';
+          link.click();
+
+          statusDiv.style.color = "#16a34a";
+          statusDiv.innerText = `✅ Đã tạo thành công dethi.js (${questions.length} câu - Đã nhúng ảnh & công thức)!`;
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  </script>
+</body>
+</html>

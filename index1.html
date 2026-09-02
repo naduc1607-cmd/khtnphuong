@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lớp Học Hóa Học Trực Tuyến</title>
+  
+  <script src="students.js"></script>
+  <script src="dethi.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --secondary: #0f172a;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background-color: var(--bg); color: var(--secondary); line-height: 1.6; padding-bottom: 50px; }
+
+    /* Header với background ảnh hóa học + hiệu ứng nổi */
+    header {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(2, 132, 199, 0.75) 100%),
+                  url('hoahoc.jpg') center/cover no-repeat;
+      color: #ffffff;
+      padding: 50px 20px 45px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      border-bottom: 3px solid #38bdf8;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.2);
+      color: #7dd3fc;
+      border: 1px solid rgba(125, 211, 252, 0.4);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      backdrop-filter: blur(4px);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #ffa704;
+      text-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(2, 132, 199, 0.4);
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 1.5rem;
+      color: #e2e8f0;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .container { max-width: 800px; margin: 25px auto; padding: 0 15px; }
+    .card { background: var(--card-bg); padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+    /* Chỉ số chân và hình ảnh */
+    sub { font-size: 0.8em; vertical-align: sub; line-height: 0; }
+    sup { font-size: 0.8em; vertical-align: super; line-height: 0; }
+    img { max-width: 100%; height: auto; display: inline-block; vertical-align: middle; margin: 8px 0; border-radius: 6px; }
+
+    .login-box { max-width: 450px; margin: 40px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
+
+    .user-bar { background: #e0f2fe; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-logout { background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold; text-decoration: underline; }
+
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; font-weight: 600; cursor: pointer; border-radius: 8px; font-size: 1rem; }
+    .tab-btn.active { background: var(--primary); color: white; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .exam-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+    .timer-box { font-size: 1.05rem; font-weight: bold; color: var(--danger); background: #fee2e2; padding: 8px 14px; border-radius: 6px; }
+    .cheat-warning { font-size: 0.95rem; font-weight: bold; color: #b45309; background: #fef3c7; padding: 8px 14px; border-radius: 6px; }
+
+    .question-card { margin-bottom: 20px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .question-title { font-weight: 600; margin-bottom: 10px; font-size: 1.05rem; }
+    .options label { display: block; margin: 6px 0; cursor: pointer; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; }
+    .options label:hover { background: #f1f5f9; }
+
+    .short-answer-input {
+      width: 100%; max-width: 320px; padding: 10px 12px; border: 2px solid #94a3b8;
+      border-radius: 6px; font-size: 1.05rem; font-weight: 600; color: #0284c7; margin-top: 6px;
+    }
+    .short-answer-input:focus { border-color: var(--primary); outline: none; }
+
+    .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.05rem; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; }
+    .btn-submit:hover { opacity: 0.9; }
+
+    .result-box { display: none; margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; background: #e0f2fe; color: #0369a1; }
+    .correct-answer-box { display: none; margin-top: 10px; padding: 8px 12px; font-size: 0.95rem; font-weight: bold; color: #0369a1; background: #f0f9ff; border-left: 4px solid var(--primary); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-badge">🧪 HÓA HỌC & KHOA HỌC TỰ NHIÊN</div>
+    <h1>Lớp Hóa học & Khoa học tự nhiên chị Phương</h1>
+    <p>Hệ thống ôn luyện và kiểm tra định kì</p>
+  </header>
+
+  <!-- ĐĂNG NHẬP -->
+  <div class="login-box" id="loginCard">
+    <h3 style="text-align: center; color: var(--primary); margin-bottom: 15px; font-size: 1.7rem;">Đăng Nhập Học Sinh</h3>
+    <div class="form-group">
+      <label>Mã học sinh / Số báo danh:</label>
+      <input type="text" id="loginId" placeholder="Ví dụ: HS01" style="text-transform: uppercase;">
+    </div>
+    <div class="form-group">
+      <label>Mật khẩu:</label>
+      <input type="password" id="loginPass" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter') handleStudentLogin()">
+    </div>
+    <button type="button" class="btn-submit" onclick="handleStudentLogin()">Đăng Nhập Vào Học</button>
+    <div id="loginError" style="color: red; margin-top: 10px; text-align: center; display: none; font-weight: bold;">Mã học sinh hoặc mật khẩu chưa đúng!</div>
+  </div>
+
+  <!-- PHÒNG HỌC -->
+  <div class="container" id="mainApp" style="display: none;">
+    <div class="user-bar">
+      <div>Học sinh: <b id="uName">...</b> - Lớp: <b id="uClass">...</b></div>
+      <button class="btn-logout" onclick="location.reload()">Đăng xuất</button>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('exam-tab', this)">📝 Bài Kiểm Tra Trực Tuyến</button>
+      <button class="tab-btn" onclick="switchTab('homework-tab', this)">📤 Nộp Bài Tập Về Nhà</button>
+    </div>
+
+    <!-- TAB BÀI THI -->
+    <div id="exam-tab" class="tab-content card active">
+      <div class="exam-header">
+        <div class="cheat-warning" id="cheatStatus">⚠️ Rời khỏi màn hình: <b>0/3</b> lần</div>
+        <div class="timer-box">⏳ Thời gian còn lại: <span id="timerDisplay">--:--</span></div>
+      </div>
+      <div id="quiz-area"></div>
+      <button id="submitExamBtn" type="button" class="btn-submit" onclick="submitExam()">Nộp Bài Thi</button>
+      <div id="result" class="result-box"></div>
+    </div>
+
+    <!-- TAB BTVN -->
+    <div id="homework-tab" class="tab-content card">
+      <h3 style="margin-bottom: 10px;">Nộp Bài Tập Tự Luận / BTVN</h3>
+      <p style="margin-bottom: 15px; color: #64748b; font-size: 0.95rem;">Đính kèm link hình ảnh bài giải chụp qua điện thoại (Google Drive / Cloud):</p>
+      
+      <form onsubmit="submitHomework(event)">
+        <div class="form-group">
+          <label>Đường dẫn bài làm (Link Google Drive):</label>
+          <input type="url" id="hwLink" required placeholder="https://drive.google.com/file/d/...">
+        </div>
+        <div class="form-group">
+          <label>Ghi chú hoặc câu hỏi chưa hiểu gửi thầy cô:</label>
+          <textarea id="hwNote" rows="3" placeholder="Em chưa hiểu cách cân bằng phương trình ở câu..."></textarea>
+        </div>
+        <button type="submit" class="btn-submit">Gửi Bài Tập</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx5BCsXeaWCrNYGoQxwdakiI1Fqwo6eTitazEIine969f90BtpHDuJb-3X2ozGYneYD2A/exec";
+
+    let currentStudent = null;
+    let questionsData = [];
+    let timerInterval = null;
+    let isSubmitted = false;
+    let cheatCount = 0;
+    const MAX_VIOLATIONS = 3;
+
+    function handleStudentLogin() {
+      const id = document.getElementById('loginId').value.trim().toUpperCase();
+      const pass = document.getElementById('loginPass').value.trim();
+      const errorDiv = document.getElementById('loginError');
+
+      if (typeof STUDENT_LIST === 'undefined') {
+        alert("Lỗi: Không tìm thấy file students.js!");
+        return;
+      }
+
+      const student = STUDENT_LIST.find(s => s.id === id && s.pass === pass);
+      if (student) {
+        currentStudent = student;
+        document.getElementById('loginCard').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('uName').innerText = student.name;
+        document.getElementById('uClass').innerText = student.sClass;
+        initExam();
+        setupAntiCheat();
+      } else {
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function initExam() {
+      const quizArea = document.getElementById('quiz-area');
+      const submitBtn = document.getElementById('submitExamBtn');
+
+      if (typeof EXAM_DATA === 'undefined' || !EXAM_DATA.questions || EXAM_DATA.questions.length === 0) {
+        quizArea.innerHTML = "<p style='text-align: center; color: red;'>⚠️ Chưa tìm thấy file <b>dethi.js</b>!</p>";
+        submitBtn.style.display = 'none';
+        return;
+      }
+
+      questionsData = EXAM_DATA.questions;
+      let html = '';
+
+      questionsData.forEach((q, i) => {
+        html += `<div class="question-card" id="card_${i}"><div class="question-title">${q.question}</div>`;
+
+        if (q.type === 'short_answer') {
+          html += `
+            <div style="margin-top: 8px;">
+              <span style="font-size: 0.95rem; color: #475569;">Nhập đáp án của em: </span>
+              <input type="text" class="short-answer-input" id="ans_input_${i}" placeholder="Gõ câu trả lời...">
+            </div>
+          `;
+        } else {
+          html += `<div class="options">`;
+          for (let opt in q.options) {
+            html += `
+              <label>
+                <input type="radio" name="ans_${i}" value="${opt}">
+                <b>${opt}.</b> ${q.options[opt]}
+              </label>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        html += `<div class="correct-answer-box" id="ans_box_${i}">💡 Đáp án đúng là: ${q.answer}</div>`;
+        html += `</div>`;
+      });
+
+      quizArea.innerHTML = html;
+      startTimer((EXAM_DATA.duration || 15) * 60);
+    }
+
+    function setupAntiCheat() {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && !isSubmitted) handleViolation();
+      });
+
+      window.addEventListener("beforeunload", (e) => {
+        if (!isSubmitted) {
+          e.preventDefault();
+          e.returnValue = "Bạn đang làm bài kiểm tra! Rời đi kết quả bài thi sẽ bị hủy.";
+        }
+      });
+    }
+
+    function handleViolation() {
+      cheatCount++;
+      document.getElementById('cheatStatus').innerHTML = `⚠️ Rời khỏi màn hình: <b>${cheatCount}/${MAX_VIOLATIONS}</b> lần`;
+
+      if (cheatCount >= MAX_VIOLATIONS) {
+        alert("CẢNH BÁO: Bạn đã rời khỏi màn hình quá 3 lần! Bài thi bị khóa và tự động nộp.");
+        submitExam("Tự động nộp do rời tab quá 3 lần");
+      } else {
+        alert(`CẢNH BÁO: Bạn vừa chuyển tab hoặc thoát ứng dụng! (Lần ${cheatCount}/${MAX_VIOLATIONS}).`);
+      }
+    }
+
+    function startTimer(secondsLeft) {
+      if (timerInterval) clearInterval(timerInterval);
+      const display = document.getElementById('timerDisplay');
+      isSubmitted = false;
+
+      timerInterval = setInterval(() => {
+        let m = Math.floor(secondsLeft / 60);
+        let s = secondsLeft % 60;
+        display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          alert('Đã hết thời gian làm bài! Hệ thống tự động nộp bài.');
+          submitExam("Hết giờ làm bài");
+        }
+        secondsLeft--;
+      }, 1000);
+    }
+
+    function submitExam(reasonNote = "") {
+      if (isSubmitted) return;
+      isSubmitted = true;
+      clearInterval(timerInterval);
+
+      let score = 0;
+      let detailedAnswers = [];
+
+      questionsData.forEach((q, i) => {
+        const card = document.getElementById(`card_${i}`);
+        const ansBox = document.getElementById(`ans_box_${i}`);
+        if (ansBox) ansBox.style.display = 'block';
+
+        let studentChoice = "";
+        let isCorrect = false;
+
+        if (q.type === 'short_answer') {
+          let inputEl = document.getElementById(`ans_input_${i}`);
+          studentChoice = inputEl ? inputEl.value.trim() : "";
+          
+          let cleanStudentAns = studentChoice.toLowerCase().replace(/\s+/g, '');
+          let cleanCorrectAns = (q.answer || "").toString().toLowerCase().replace(/\s+/g, '');
+
+          isCorrect = (cleanStudentAns !== "" && cleanStudentAns === cleanCorrectAns);
+        } else {
+          let selected = document.querySelector(`input[name="ans_${i}"]:checked`);
+          studentChoice = selected ? selected.value : "";
+          isCorrect = (selected && selected.value.toUpperCase() === (q.answer || "").toUpperCase());
+        }
+
+        if (isCorrect) {
+          score++;
+          card.style.background = "#f0fdf4";
+          card.style.borderColor = "var(--success)";
+          detailedAnswers.push(`C${i + 1}: ${studentChoice}(✓)`);
+        } else {
+          card.style.background = "#fef2f2";
+          card.style.borderColor = "var(--danger)";
+          let displayChoice = studentChoice || "_";
+          detailedAnswers.push(`C${i + 1}: ${displayChoice}(✗->${q.answer})`);
+        }
+      });
+
+      const total = questionsData.length;
+      const finalGrade = ((score / total) * 10).toFixed(1);
+
+      let cheatInfo = cheatCount > 0 ? ` [Rời tab: ${cheatCount}]` : "";
+      if (reasonNote) cheatInfo += ` [${reasonNote}]`;
+      const detailSummary = `Đúng ${score}/${total}${cheatInfo} | ` + detailedAnswers.join(", ");
+
+      if (GOOGLE_SHEET_URL) {
+        const payload = JSON.stringify({
+          time: new Date().toLocaleString('vi-VN'),
+          type: "Kiểm tra trực tuyến",
+          name: currentStudent.name,
+          sClass: currentStudent.sClass,
+          score: finalGrade + " / 10",
+          detail: detailSummary
+        });
+
+        fetch(GOOGLE_SHEET_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: payload
+        });
+      }
+
+      const resDiv = document.getElementById('result');
+      resDiv.style.display = 'block';
+      resDiv.innerHTML = `🎉 Em <b>${currentStudent.name}</b> (Lớp ${currentStudent.sClass}) đã nộp bài thành công!<br>Đúng: ${score}/${total} câu.<br>Số lần rời tab: <b>${cheatCount}</b> lần.<br>Điểm số: <span style="color: var(--primary); font-size: 1.4rem;">${finalGrade} / 10 Điểm</span>`;
+      resDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function submitHomework(e) {
+      e.preventDefault();
+      const link = document.getElementById('hwLink').value.trim();
+      const note = document.getElementById('hwNote').value.trim();
+
+      if (GOOGLE_SHEET_URL) {
+        const payload = JSON.stringify({
+          time: new Date().toLocaleString('vi-VN'),
+          type: "Bài tập về nhà",
+          name: currentStudent.name,
+          sClass: currentStudent.sClass,
+          score: "Chờ chấm",
+          detail: `Link: ${link} | Ghi chú: ${note}`
+        });
+
+        fetch(GOOGLE_SHEET_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: payload
+        });
+      }
+
+      alert("✅ Đã gửi bài tập về nhà thành công!");
+      document.getElementById('hwLink').value = '';
+      document.getElementById('hwNote').value = '';
+    }
+  </script>
+</body>
+</html>
